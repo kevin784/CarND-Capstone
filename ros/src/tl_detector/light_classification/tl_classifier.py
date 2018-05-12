@@ -1,18 +1,32 @@
 from styx_msgs.msg import TrafficLight
 import cv2
-from keras.models import load_model
 from numpy import newaxis
 import numpy as np
 import tensorflow as tf 
 import os
+import datetime
 
 class TLClassifier(object):
     def __init__(self):
-	path = os.getcwd()
-        self.model = load_model(path + '/test_1.h5') 
-	self.model._make_predict_function()
-        self.graph = tf.get_default_graph()
-        #pass
+        path = os.getcwd()
+        model = path + '/fg.pb'
+        self.graph = tf.Graph()
+        self.threshold = .5
+
+        with self.graph.as_default():
+            od_graph_def = tf.GraphDef()
+            with tf.gfile.GFile(model) as fid:
+                od_graph_def.ParseFromString(fid.read())
+                tf.import_graph_def(od_graph_def, name='')
+
+            self.image_tensor = self.graph.get_tensor_by_name('image_tensor:0')
+            self.boxes = self.graph.get_tensor_by_name('detection_boxes:0')
+            self.scores = self.graph.get_tensor_by_name('detection_scores:0')
+            self.classes = self.graph.get_tensor_by_name('detection_classes:0')
+            self.num_detections = self.graph.get_tensor_by_name(
+                'num_detections:0')
+
+        self.sess = tf.Session(graph=self.graph)
 
     def get_classification(self, image):
         """Determines the color of the traffic light in the image
@@ -21,18 +35,33 @@ class TLClassifier(object):
         Returns:
             int: ID of traffic light color (specified in styx_msgs/TrafficLight)
         """
-        image = cv2.resize(image, (400, 400)) 
-        image = image.astype(float)
-    	image = image / 255.0
-    	image = image[newaxis,:,:,:]
-	with self.graph.as_default():
-            predictions = self.model.predict(image)
-    	classification = np.argmax(predictions, axis=1)
-    	#print('Classification:' ,classification[0])
 
-        if(classification[0] == 1):
-	   print("Classifier predicted RED light")
-           return TrafficLight.RED
+        with self.graph.as_default():
+            img_expand = np.expand_dims(image, axis=0)
+            start = datetime.datetime.now()
+            (boxes, scores, classes, num_detections) = self.sess.run(
+                [self.boxes, self.scores, self.classes, self.num_detections],
+                feed_dict={self.image_tensor: img_expand})
+            end = datetime.datetime.now()
+            c = end - start
+            print(c.total_seconds())
 
-	print("Classifier predicted NOT red light")
+        boxes = np.squeeze(boxes)
+        scores = np.squeeze(scores)
+        classes = np.squeeze(classes).astype(np.int32)
+
+        print('Scores: ', scores[0])
+        print('Classes: ', classes[0])
+
+        if scores[0] > self.threshold:
+            if classes[0] == 1:
+                print('GREEN')
+                return TrafficLight.GREEN
+            elif classes[0] == 2:
+                print('RED')
+                return TrafficLight.RED
+            elif classes[0] == 3:
+                print('YELLOW')
+                return TrafficLight.YELLOW
+
         return TrafficLight.UNKNOWN
