@@ -1,21 +1,82 @@
-#Udacity Self Driving Car Nanodegree
+#Udacity 
+#Self Driving Car Nanodegree
 
 ##Term 3 Capstone Project
+###System Integration: Programming a real self driving car 
 
-This is the project repo for Team "Home James!"
+
+![alt text](imgs/RetroSDC2.png "Retro SDC - Home James!")
+
+###Team "Home James!"
+
+* Kevin Randall	 - 784spruce@gmail.com (Team Lead)
+
+* Driss Squalli - drisspa@gmail.com
+
+* Grigory Kostromin - grigory.kostromin@gmail.com
+
+* Sharon Liu - sliu810@gmail.com
+
+* Harish Vadlamani - harish3110@gmail.com
 
 
-![alt text](imgs/HomeJames.png "HomeJames logo")
+This is the final project of Udacity's Self Driving Car (SDC) Nanodegree program. In this project we use the open source Robotic Operating System (ROS) together with dataspeed Drive By Wire (DBW) to control a vehicle's steering, brake and accelerator. Code is tested on Udacity's simulator and (having passed review) is loaded on to Carla - Udacity's Lincoln MKZ SDC, to navigate a test lot. This project leverages skills and techniques acquired from earlier projects in the program.
 
-Driss Squalli
+ROS uses the concept of nodes as discrete processing units that "publish" (send) "topics" (data) that are received by "subscribers". The architecture for this project is illustreted in block diagram below. 
 
-Grigory Kostromin
+![alt text](imgs/Architecture.png "SDC Architecture.png")
 
-Sharon Liu
+This project essentially uses the same track as Path Planning (term 3, project 1) except here the waypoints are closely spaced (about 0.5 meters apart), so waypoint interpolation is not necessary for this project.
+![alt text](imgs/T3P3_track.png "Sim Track")
 
-Harish Vadlamani
+In addition the capstone project sim track features 8 Traffic lights, locations around the track are shown below:
 
-Kevin Randall
+![alt text](imgs/T3P3_TL_positions.png "Traffic Lights")
+
+In the figure below, the Udacity Sim vehicle is being held (brake = 400, throttle = 0) behind the stop line for a red light using code in this repo.
+
+![alt text](imgs/AtStopLight.png "At Stop Light")
+
+###Code
+
+The three main components that we completed for this project are briefly described below.
+
+#####Waypoint updater
+
+Track waypoints are loaded at initialization. Based on the current pose of the vehicle the waypoint updater assigns target linear and angular velocities, depending on traffic lights and obstacles, for 200 waypoints ahead of the vehicle. 
+
+#####Traffic Light Detector
+
+Traffic light stop line positions are read in at initialization from the configuration file - src/tl_detector/sim_traffic_light_config.yaml.
+
+Camera images (from the /image_color topic) are classified as containing a red light, or not. The index of an upcoming red light is passed to the waypoint updater decreasing upcoming target velocities, so that the vehicle stops short of a red light. For a green light the waypoint updater will increase target velocities to a preset maximum velocity (or maintain maximum velocity).
+
+#####Drive by wire
+
+The DBW node utilizes PID and lowpass filter control to smoothly adjust throttle, brake and steering according to the waypoint target velocities.
+
+####Implementation
+In this version we have used an existing CNN image classification model (from Team America) to detect upcoming red lights. We are currently working on a version using our own classifier.
+
+Testing included verifying that the vehicle maximum speed was limited according to the configuration file and that toggling between auto and manual conrol did not introduce instabilty from accumulated integral errors in the PID controller for example.
+
+
+
+#####Docker Image for Tensorflow with GPU acceleration
+
+Ubuntu is necessary for this project. Slack and forum discussions indicate that the vehicle becomes uncontrolllable if trying to run project code in a Virtual Machine (VM) - for example running a Ubuntu VM on a windows machine. 
+
+Initial testing showed slight performance issues even with a native Ubuntu 16.04 desktop (Intel i5-4430 with 16GB RAM), when using the image classifier. Utilizing an Nvidia Titan X Pascal GPU (12GB) on this system solved performance issues. Using Tensorflow GPU acceleration requires a modified Docker image. Files to create the image are included in the Docker-gpu directory, and are based on Attila Babo (https://gist.github.com/babo/94309eac327209ca68867fb579bb12be) 
+
+
+Build the docker image with gpu support:
+
+bash docker build . -t capstone_gpu
+
+Run the docker file:
+
+sudo nvidia-docker run -e DISPLAY=$DISPLAY -p 4567:4567 -v $PWD:/capstone -v
+/tmp/log:/root/.ros/ -v /tmp/.X11-unix:/tmp/.X11-unix:rw --rm -it capstone_gpu
 
 
 ____
