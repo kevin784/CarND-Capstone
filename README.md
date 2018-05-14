@@ -1,13 +1,13 @@
-#Udacity 
-#Self Driving Car Nanodegree
+# Udacity 
+# Self Driving Car Nanodegree
 
-##Term 3 Capstone Project
-###System Integration: Programming a real self driving car 
+## Term 3 Capstone Project
+### System Integration: Programming a real self driving car 
 
 
 ![alt text](imgs/RetroSDC2.png "Retro SDC - Home James!")
 
-###Team "Home James!"
+### Team "Home James!"
 
 * Kevin Randall	 - 784spruce@gmail.com (Team Lead)
 
@@ -37,32 +37,32 @@ In the figure below, the Udacity Sim vehicle is being held (brake = 400, throttl
 
 ![alt text](imgs/AtStopLight.png "At Stop Light")
 
-###Code
+### Code
 
 The three main components that we completed for this project are briefly described below.
 
-#####Waypoint updater
+##### Waypoint updater
 
 Track waypoints are loaded at initialization. Based on the current pose of the vehicle the waypoint updater assigns target linear and angular velocities, depending on traffic lights and obstacles, for 200 waypoints ahead of the vehicle. 
 
-#####Traffic Light Detector
+##### Traffic Light Detector
 
 Traffic light stop line positions are read in at initialization from the configuration file - src/tl_detector/sim_traffic_light_config.yaml.
 
 Camera images (from the /image_color topic) are classified as containing a red light, or not. The index of an upcoming red light is passed to the waypoint updater decreasing upcoming target velocities, so that the vehicle stops short of a red light. For a green light the waypoint updater will increase target velocities to a preset maximum velocity (or maintain maximum velocity).
 
-#####Drive by wire
+##### Drive by wire
 
 The DBW node utilizes PID and lowpass filter control to smoothly adjust throttle, brake and steering according to the waypoint target velocities.
 
-####Implementation
+#### Implementation
 In this version we have used an existing CNN image classification model (from Team America) to detect upcoming red lights. We are currently working on a version using our own classifier.
 
 Testing included verifying that the vehicle maximum speed was limited according to the configuration file and that toggling between auto and manual conrol did not introduce instabilty from accumulated integral errors in the PID controller for example.
 
 
 
-#####Docker Image for Tensorflow with GPU acceleration
+##### Docker Image for Tensorflow with GPU acceleration
 
 Ubuntu is necessary for this project. Slack and forum discussions indicate that the vehicle becomes uncontrolllable if trying to run project code in a Virtual Machine (VM) - for example running a Ubuntu VM on a windows machine. 
 
