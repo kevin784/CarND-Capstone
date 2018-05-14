@@ -17,12 +17,12 @@ class Controller(object):
 
         kp = 0.3 ###5.0 ###0.3 #0.01
         ki = 0.1
-        kd = 0.3 ###0.0
-        mn = 0.0
-        mx = 0.2
+        kd = 0.0 #0.3
+        mn = 0.0 # Minimum throttle value
+        mx = 0.2 # Maximum throttle value
         self.throttle_controller = PID(kp, ki, kd, mn, mx)
 
-        tau = 0.5 ### 0.5
+        tau = 0.5 ### 0.5 # 1/(2pi*tau) = cutoff frequency
         ts = 0.02 ###0.02
         self.vel_lpf = LowPassFilter(tau, ts)
 
